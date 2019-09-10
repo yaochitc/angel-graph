@@ -76,7 +76,9 @@ public class InitNeighborTest {
 		Map<Long, NodeIDWeightPairs> id2Neighbors3 = psGraph.getSortedFullNeighbor(nodeIds, edgeTypes);
 		Map<Long, NodeIDWeightPairs> id2Neighbors4 = psGraph.getTopKNeighbor(nodeIds, edgeTypes, 2);
 
-		System.out.println(id2Neighbors1);
+		long[] sampleNodes = psGraph.sampleNode(nodeType, 5);
+
+		EdgeId[] edges = psGraph.sampleEdge(0, 5);
 	}
 
 	private Node createNode(long id, int type, float weight) {
