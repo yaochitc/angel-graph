@@ -11,7 +11,7 @@ import java.util.Arrays;
 /**
  * Graph node
  */
-public class Node implements INode, IElement {
+public class Node implements IElement {
 
 	/**
 	 * Node id

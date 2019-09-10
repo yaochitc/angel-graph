@@ -8,7 +8,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class Edge implements IEdge, IElement {
+public class Edge implements IElement {
 	private EdgeId id;
 	private int type;
 	private float weight;
