@@ -34,6 +34,8 @@ import com.tencent.angel.graph.client.getsortedfullneighbor.GetSortedFullNeighbo
 import com.tencent.angel.graph.client.gettopkneighbor.GetTopkNeighbor;
 import com.tencent.angel.graph.client.gettopkneighbor.GetTopkNeighborParam;
 import com.tencent.angel.graph.client.gettopkneighbor.GetTopkNeighborResult;
+import com.tencent.angel.graph.client.initneighbor.InitNeighbor;
+import com.tencent.angel.graph.client.initneighbor.InitNeighborParam;
 import com.tencent.angel.graph.client.sampleedge.SampleEdge;
 import com.tencent.angel.graph.client.sampleedge.SampleEdgeParam;
 import com.tencent.angel.graph.client.sampleedge.SampleEdgeResult;
@@ -43,6 +45,7 @@ import com.tencent.angel.graph.client.sampleneighbor.SampleNeighborResult;
 import com.tencent.angel.graph.client.samplenode.SampleNode;
 import com.tencent.angel.graph.client.samplenode.SampleNodeParam;
 import com.tencent.angel.graph.client.samplenode.SampleNodeResult;
+import com.tencent.angel.graph.data.NodeEdgesPair;
 import com.tencent.angel.graph.data.NodeIDWeightPairs;
 import com.tencent.angel.graph.data.NodeWalkPair;
 import com.tencent.angel.graph.data.feature.BinaryFeatures;
@@ -189,6 +192,10 @@ public class PSGraph implements IGraph {
 		return new NodeWalkPair(curWalkNeighbors, id2Neighbors);
 	}
 
+	@Override
+	public void initNeighbor(NodeEdgesPair[] nodeEdgesPairs) {
+		psMatrix.psfUpdate(new InitNeighbor(new InitNeighborParam(psMatrix.id(), nodeEdgesPairs)));
+	}
 
 	@Override
 	public long[] sampleNode(int nodeType, int count) {

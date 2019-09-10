@@ -17,6 +17,7 @@
 
 package com.tencent.angel.graph.client;
 
+import com.tencent.angel.graph.data.NodeEdgesPair;
 import com.tencent.angel.graph.data.NodeIDWeightPairs;
 import com.tencent.angel.graph.data.NodeWalkPair;
 import com.tencent.angel.graph.data.feature.BinaryFeatures;
@@ -31,40 +32,43 @@ import java.util.Map;
  */
 public interface IGraph {
 
-  void buildGlobalSampler();
+	void buildGlobalSampler();
 
-  NodeWalkPair biasedSampleNeighbor(long[] nodeIds, Map<Long, NodeIDWeightPairs> parentNodeNeighbors, int[] edgeTypes,
-                                    int count, float p, float q);
+	NodeWalkPair biasedSampleNeighbor(long[] nodeIds, Map<Long, NodeIDWeightPairs> parentNodeNeighbors, int[] edgeTypes,
+									  int count, float p, float q);
 
-  long[] sampleNode(int nodeType, int count);
+	void initNeighbor(NodeEdgesPair[] nodeEdgesPairs);
 
-  EdgeId[] sampleEdge(int edgeType, int count);
+	long[] sampleNode(int nodeType, int count);
 
-  Map<Long, Integer> getNodeType(long[] nodeIds);
+	EdgeId[] sampleEdge(int edgeType, int count);
 
-  Map<Long, FloatFeatures> getNodeFloatFeature(long[] nodeIds, int[] fids);
+	Map<Long, Integer> getNodeType(long[] nodeIds);
 
-  Map<Long, LongFeatures> getNodeLongFeature(long[] nodeIds, int[] fids);
+	Map<Long, FloatFeatures> getNodeFloatFeature(long[] nodeIds, int[] fids);
 
-  Map<Long, BinaryFeatures> getNodeBinaryFeature(long[] nodeIds, int[] fids);
+	Map<Long, LongFeatures> getNodeLongFeature(long[] nodeIds, int[] fids);
 
-  Map<EdgeId, FloatFeatures> getEdgeFloatFeature(EdgeId[] edgeIds, int[] fids);
+	Map<Long, BinaryFeatures> getNodeBinaryFeature(long[] nodeIds, int[] fids);
 
-  Map<EdgeId, LongFeatures> getEdgeLongFeature(EdgeId[] edgeIds, int[] fids);
+	Map<EdgeId, FloatFeatures> getEdgeFloatFeature(EdgeId[] edgeIds, int[] fids);
 
-  Map<EdgeId, BinaryFeatures> getEdgeBinaryFeature(EdgeId[] edgeIds, int[] fids);
+	Map<EdgeId, LongFeatures> getEdgeLongFeature(EdgeId[] edgeIds, int[] fids);
 
-  /**
-   * Get full neighbors for given edge types
-   * @param nodeIds node ids
-   * @param edgeTypes edge types
-   * @return node id to result map
-   */
-  Map<Long, NodeIDWeightPairs> getFullNeighbor(long[] nodeIds, int[] edgeTypes);
+	Map<EdgeId, BinaryFeatures> getEdgeBinaryFeature(EdgeId[] edgeIds, int[] fids);
 
-  Map<Long, NodeIDWeightPairs> getSortedFullNeighbor(long[] nodeIds, int[] edgeTypes);
+	/**
+	 * Get full neighbors for given edge types
+	 *
+	 * @param nodeIds   node ids
+	 * @param edgeTypes edge types
+	 * @return node id to result map
+	 */
+	Map<Long, NodeIDWeightPairs> getFullNeighbor(long[] nodeIds, int[] edgeTypes);
 
-  Map<Long, NodeIDWeightPairs> getTopKNeighbor(long[] nodeIds, int[] edgeTypes, int k);
+	Map<Long, NodeIDWeightPairs> getSortedFullNeighbor(long[] nodeIds, int[] edgeTypes);
 
-  Map<Long, NodeIDWeightPairs> sampleNeighbor(long[] nodeIds, int[] edgeTypes, int count);
+	Map<Long, NodeIDWeightPairs> getTopKNeighbor(long[] nodeIds, int[] edgeTypes, int k);
+
+	Map<Long, NodeIDWeightPairs> sampleNeighbor(long[] nodeIds, int[] edgeTypes, int count);
 }
