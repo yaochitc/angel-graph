@@ -38,6 +38,7 @@ import com.tencent.angel.graph.data.feature.FloatFeatures;
 import com.tencent.angel.graph.data.feature.LongFeatures;
 import com.tencent.angel.graph.data.graph.EdgeId;
 import com.tencent.angel.graph.data.graph.Node;
+import com.tencent.angel.graph.ps.storage.partition.storage.GraphServerRowsStorage;
 import com.tencent.angel.ml.math2.utils.RowType;
 import com.tencent.angel.ml.matrix.MatrixContext;
 import com.tencent.angel.psagent.PSAgentContext;
@@ -293,6 +294,7 @@ public class PSGraph implements IGraph {
 
 	public static IGraph create(long minId, long maxId) throws Exception {
 		MatrixContext matrixContext = new MatrixContext("graph", 1, minId, maxId);
+		matrixContext.setPartitionStorageClass(GraphServerRowsStorage.class);
 		matrixContext.setRowType(RowType.T_ANY_LONGKEY_SPARSE);
 		matrixContext.setValueType(Node.class);
 

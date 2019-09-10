@@ -88,6 +88,9 @@ public class Node implements IElement {
 	 */
 	private byte[] binaryFeatures;
 
+	public Node() {
+	}
+
 	public Node(long id, int type, float weight, int[] edgeTypes, float[] edgeAccSumWeights,
 				float edgeTotalSumWeights, int[] neigborGroupIndices, long[] neighbors, float[] neighborAccSumWeights,
 				int[] longFeatureIndices, long[] longFeatures, int[] floatFeatureIndices,
@@ -108,9 +111,6 @@ public class Node implements IElement {
 		this.floatFeatures = floatFeatures;
 		this.binaryFeatureIndices = binaryFeatureIndices;
 		this.binaryFeatures = binaryFeatures;
-	}
-
-	public Node() {
 	}
 
 	public long getId() {
@@ -141,8 +141,16 @@ public class Node implements IElement {
 		return edgeAccSumWeights;
 	}
 
+	public void setEdgeAccSumWeights(float[] edgeAccSumWeights) {
+		this.edgeAccSumWeights = edgeAccSumWeights;
+	}
+
 	public float getEdgeTotalSumWeights() {
 		return edgeTotalSumWeights;
+	}
+
+	public void setEdgeTotalSumWeights(float edgeTotalSumWeights) {
+		this.edgeTotalSumWeights = edgeTotalSumWeights;
 	}
 
 	public int[] getNeigborGroupIndices() {
@@ -159,6 +167,10 @@ public class Node implements IElement {
 
 	public void setNeighbors(long[] neighbors) {
 		this.neighbors = neighbors;
+	}
+
+	public void setNeighborAccSumWeights(float[] neighborAccSumWeights) {
+		this.neighborAccSumWeights = neighborAccSumWeights;
 	}
 
 	public float[] getNeighborAccSumWeights() {

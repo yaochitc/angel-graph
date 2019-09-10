@@ -19,6 +19,9 @@ public class Edge implements IElement {
 	private int[] binaryFeatureIndices;
 	private byte[] binaryFeatures;
 
+	public Edge() {
+	}
+
 	public Edge(EdgeId id, int type, float weight, int[] longFeatureIndices, long[] longFeatures,
 				int[] floatFeatureIndices, float[] floatFeatures, int[] binaryFeatureIndices,
 				byte[] binaryFeatures) {
@@ -31,9 +34,6 @@ public class Edge implements IElement {
 		this.floatFeatures = floatFeatures;
 		this.binaryFeatureIndices = binaryFeatureIndices;
 		this.binaryFeatures = binaryFeatures;
-	}
-
-	public Edge() {
 	}
 
 	public EdgeId getId() {
