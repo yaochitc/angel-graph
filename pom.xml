@@ -21,8 +21,8 @@
         </dependency>
         <dependency>
             <groupId>com.tencent.angel</groupId>
-            <artifactId>spark-on-angel-core</artifactId>
-            <version>2.3.0</version>
+            <artifactId>angel-ps-psf</artifactId>
+            <version>3.0.0</version>
         </dependency>
         <dependency>
             <groupId>it.unimi.dsi</groupId>
