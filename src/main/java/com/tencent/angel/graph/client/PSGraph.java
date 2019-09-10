@@ -43,18 +43,23 @@ import com.tencent.angel.graph.client.sampleneighbor.SampleNeighborResult;
 import com.tencent.angel.graph.client.samplenode.SampleNode;
 import com.tencent.angel.graph.client.samplenode.SampleNodeParam;
 import com.tencent.angel.graph.client.samplenode.SampleNodeResult;
-import com.tencent.angel.graph.data.NodeWalkPair;
-import com.tencent.angel.graph.data.graph.EdgeId;
 import com.tencent.angel.graph.data.NodeIDWeightPairs;
+import com.tencent.angel.graph.data.NodeWalkPair;
 import com.tencent.angel.graph.data.feature.BinaryFeatures;
 import com.tencent.angel.graph.data.feature.FloatFeatures;
 import com.tencent.angel.graph.data.feature.LongFeatures;
-import com.tencent.angel.psagent.matrix.MatrixClient;
+import com.tencent.angel.graph.data.graph.EdgeId;
+import com.tencent.angel.graph.data.graph.Node;
+import com.tencent.angel.ml.math2.utils.RowType;
+import com.tencent.angel.ml.matrix.MatrixContext;
+import com.tencent.angel.psagent.PSAgentContext;
+import com.tencent.angel.spark.models.PSMatrix;
+import com.tencent.angel.spark.models.impl.PSMatrixImpl;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
-import java.util.*;
+import java.util.Map;
 
 /**
  * PS Graph
@@ -64,18 +69,18 @@ public class PSGraph implements IGraph {
 	/**
 	 * PS matrix client
 	 */
-	private final MatrixClient matrixClient;
+	private final PSMatrix psMatrix;
 
 	private Map<Integer, Sampler<Integer>> nodeSamplers;
 	private Map<Integer, Sampler<Integer>> edgeSamplers;
 
-	public PSGraph(MatrixClient matrixClient) {
-		this.matrixClient = matrixClient;
+	public PSGraph(PSMatrix psMatrix) {
+		this.psMatrix = psMatrix;
 	}
 
 	public void buildGlobalSampler() {
-		BuildSamplerResult buildSamplerResult = ((BuildSamplerResult) matrixClient.get(new BuildSampler(
-						new BuildSamplerParam(matrixClient.getMatrixId()))));
+		BuildSamplerResult buildSamplerResult = ((BuildSamplerResult) psMatrix.psfGet(new BuildSampler(
+				new BuildSamplerParam(psMatrix.id()))));
 
 		nodeSamplers = new Int2ObjectOpenHashMap<>();
 		Map<Integer, Map<Integer, Float>> nodeWeightSums = buildSamplerResult.getNodeWeightSum();
@@ -120,7 +125,7 @@ public class PSGraph implements IGraph {
 
 	@Override
 	public NodeWalkPair biasedSampleNeighbor(long[] nodeIds, Map<Long, NodeIDWeightPairs> parentNodeNeighbors,
-																					 int[] edgeTypes, int count, float p, float q) {
+											 int[] edgeTypes, int count, float p, float q) {
 		Map<Long, NodeIDWeightPairs> id2Neighbors = getSortedFullNeighbor(nodeIds, edgeTypes);
 		Map<Long, long[]> curWalkNeighbors = new Long2ObjectOpenHashMap<>();
 		for (int i = 0; i < nodeIds.length; i++) {
@@ -194,8 +199,8 @@ public class PSGraph implements IGraph {
 			countPerPart.put(part, countPerPart.computeIfAbsent(part, k -> 0) + 1);
 		}
 
-		return ((SampleNodeResult) matrixClient.get(new SampleNode(
-						new SampleNodeParam(matrixClient.getMatrixId(), nodeType, count, countPerPart)
+		return ((SampleNodeResult) psMatrix.psfGet(new SampleNode(
+				new SampleNodeParam(psMatrix.id(), nodeType, count, countPerPart)
 		))).getNodeIds();
 	}
 
@@ -208,85 +213,95 @@ public class PSGraph implements IGraph {
 			countPerPart.put(part, countPerPart.computeIfAbsent(part, k -> 0) + 1);
 		}
 
-		return ((SampleEdgeResult) matrixClient.get(new SampleEdge(
-						new SampleEdgeParam(matrixClient.getMatrixId(), edgeType, count, countPerPart)
+		return ((SampleEdgeResult) psMatrix.psfGet(new SampleEdge(
+				new SampleEdgeParam(psMatrix.id(), edgeType, count, countPerPart)
 		))).getEdgeIds();
 	}
 
 	@Override
 	public Map<Long, Integer> getNodeType(long[] nodeIds) {
-		return ((GetNodeTypeResult) matrixClient.get(new GetNodeType(
-						new GetNodeTypeParam(matrixClient.getMatrixId(), nodeIds)
+		return ((GetNodeTypeResult) psMatrix.psfGet(new GetNodeType(
+				new GetNodeTypeParam(psMatrix.id(), nodeIds)
 		))).getNodeIdToNodeTypes();
 	}
 
 	@Override
 	public Map<Long, FloatFeatures> getNodeFloatFeature(long[] nodeIds, int[] fids) {
-		return ((GetNodeFloatFeatureResult) matrixClient.get(new GetNodeFloatFeature(
-						new GetNodeFeatureParam(matrixClient.getMatrixId(), nodeIds, fids))))
-						.getNodeFeatures();
+		return ((GetNodeFloatFeatureResult) psMatrix.psfGet(new GetNodeFloatFeature(
+				new GetNodeFeatureParam(psMatrix.id(), nodeIds, fids))))
+				.getNodeFeatures();
 	}
 
 	@Override
 	public Map<Long, LongFeatures> getNodeLongFeature(long[] nodeIds, int[] fids) {
-		return ((GetNodeLongFeatureResult) matrixClient.get(new GetNodeLongFeature(
-						new GetNodeFeatureParam(matrixClient.getMatrixId(), nodeIds, fids))))
-						.getNodeFeatures();
+		return ((GetNodeLongFeatureResult) psMatrix.psfGet(new GetNodeLongFeature(
+				new GetNodeFeatureParam(psMatrix.id(), nodeIds, fids))))
+				.getNodeFeatures();
 	}
 
 	@Override
 	public Map<Long, BinaryFeatures> getNodeBinaryFeature(long[] nodeIds, int[] fids) {
-		return ((GetNodeBinaryFeatureResult) matrixClient.get(new GetNodeBinaryFeature(
-						new GetNodeFeatureParam(matrixClient.getMatrixId(), nodeIds, fids))))
-						.getNodeFeatures();
+		return ((GetNodeBinaryFeatureResult) psMatrix.psfGet(new GetNodeBinaryFeature(
+				new GetNodeFeatureParam(psMatrix.id(), nodeIds, fids))))
+				.getNodeFeatures();
 	}
 
 	@Override
 	public Map<EdgeId, FloatFeatures> getEdgeFloatFeature(EdgeId[] edgeIds, int[] fids) {
-		return ((GetEdgeFloatFeatureResult) matrixClient.get(new GetEdgeLongFeature(
-						new GetEdgeFeatureParam(matrixClient.getMatrixId(), edgeIds, fids))))
-						.getEdgeFeatures();
+		return ((GetEdgeFloatFeatureResult) psMatrix.psfGet(new GetEdgeLongFeature(
+				new GetEdgeFeatureParam(psMatrix.id(), edgeIds, fids))))
+				.getEdgeFeatures();
 	}
 
 	@Override
 	public Map<EdgeId, LongFeatures> getEdgeLongFeature(EdgeId[] edgeIds, int[] fids) {
-		return ((GetEdgeLongFeatureResult) matrixClient.get(new GetEdgeLongFeature(
-						new GetEdgeFeatureParam(matrixClient.getMatrixId(), edgeIds, fids))))
-						.getEdgeFeatures();
+		return ((GetEdgeLongFeatureResult) psMatrix.psfGet(new GetEdgeLongFeature(
+				new GetEdgeFeatureParam(psMatrix.id(), edgeIds, fids))))
+				.getEdgeFeatures();
 	}
 
 	@Override
 	public Map<EdgeId, BinaryFeatures> getEdgeBinaryFeature(EdgeId[] edgeIds, int[] fids) {
-		return ((GetEdgeBinaryFeatureResult) matrixClient.get(new GetEdgeBinaryFeature(
-						new GetEdgeFeatureParam(matrixClient.getMatrixId(), edgeIds, fids))))
-						.getEdgeFeatures();
+		return ((GetEdgeBinaryFeatureResult) psMatrix.psfGet(new GetEdgeBinaryFeature(
+				new GetEdgeFeatureParam(psMatrix.id(), edgeIds, fids))))
+				.getEdgeFeatures();
 	}
 
 	@Override
 	public Map<Long, NodeIDWeightPairs> getFullNeighbor(long[] nodeIds, int[] edgeTypes) {
-		return ((GetFullNeighborResult) matrixClient.get(new GetFullNeighbor(
-						new GetFullNeighborParam(matrixClient.getMatrixId(), nodeIds, edgeTypes))))
-						.getNodeIdToNeighbors();
+		return ((GetFullNeighborResult) psMatrix.psfGet(new GetFullNeighbor(
+				new GetFullNeighborParam(psMatrix.id(), nodeIds, edgeTypes))))
+				.getNodeIdToNeighbors();
 	}
 
 	@Override
 	public Map<Long, NodeIDWeightPairs> getSortedFullNeighbor(long[] nodeIds, int[] edgeTypes) {
-		return ((GetSortedFullNeighborResult) matrixClient.get(new GetSortedFullNeighbor(
-						new GetSortedFullNeighborParam(matrixClient.getMatrixId(), nodeIds, edgeTypes))))
-						.getNodeIdToNeighbors();
+		return ((GetSortedFullNeighborResult) psMatrix.psfGet(new GetSortedFullNeighbor(
+				new GetSortedFullNeighborParam(psMatrix.id(), nodeIds, edgeTypes))))
+				.getNodeIdToNeighbors();
 	}
 
 	@Override
 	public Map<Long, NodeIDWeightPairs> getTopKNeighbor(long[] nodeIds, int[] edgeTypes, int k) {
-		return ((GetTopkNeighborResult) matrixClient.get(new GetTopkNeighbor(
-						new GetTopkNeighborParam(matrixClient.getMatrixId(), nodeIds, edgeTypes, k))))
-						.getNodeIdToNeighbors();
+		return ((GetTopkNeighborResult) psMatrix.psfGet(new GetTopkNeighbor(
+				new GetTopkNeighborParam(psMatrix.id(), nodeIds, edgeTypes, k))))
+				.getNodeIdToNeighbors();
 	}
 
 	@Override
 	public Map<Long, NodeIDWeightPairs> sampleNeighbor(long[] nodeIds, int[] edgeTypes, int count) {
-		return ((SampleNeighborResult) matrixClient.get(new SampleNeighbor(
-						new SampleNeighborParam(matrixClient.getMatrixId(), nodeIds, edgeTypes, count))))
-						.getNodeIdToNeighbors();
+		return ((SampleNeighborResult) psMatrix.psfGet(new SampleNeighbor(
+				new SampleNeighborParam(psMatrix.id(), nodeIds, edgeTypes, count))))
+				.getNodeIdToNeighbors();
+	}
+
+	public static IGraph create(long minId, long maxId) throws Exception {
+		MatrixContext matrixContext = new MatrixContext("graph", 1, minId, maxId);
+		matrixContext.setRowType(RowType.T_ANY_LONGKEY_SPARSE);
+		matrixContext.setValueType(Node.class);
+
+		PSAgentContext.get().getMasterClient().createMatrix(matrixContext, 10000L);
+		int graphId = PSAgentContext.get().getMasterClient().getMatrix("graph").getId();
+		return new PSGraph(new PSMatrixImpl(graphId, 1, maxId, matrixContext.getRowType()));
 	}
 }

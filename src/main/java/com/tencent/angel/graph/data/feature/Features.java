@@ -4,7 +4,7 @@ public class Features<T> {
 	private int[] featureSizes;
 	private T[] featureValues;
 
-	public Features(int[] featureSizes, T[] featureValues) {
+	Features(int[] featureSizes, T[] featureValues) {
 		this.featureSizes = featureSizes;
 		this.featureValues = featureValues;
 	}

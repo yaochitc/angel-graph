@@ -8,17 +8,17 @@ public class NodeIDWeightPair implements Serialize {
 	/**
 	 * Edge type
 	 */
-	int edgeType;
+	private int edgeType;
 
 	/**
 	 * Neighbor node id
 	 */
-	long nodeId;
+	private long nodeId;
 
 	/**
 	 * Neighbor node weight
 	 */
-	float nodeWeight;
+	private float nodeWeight;
 
 	public NodeIDWeightPair(int edgeType, long nodeId, float nodeWeight) {
 		this.edgeType = edgeType;
