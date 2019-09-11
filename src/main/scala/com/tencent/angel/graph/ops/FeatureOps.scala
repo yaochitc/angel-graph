@@ -29,7 +29,7 @@ object FeatureOps {
 
   def getEdgeDenseFeature(edges: Array[EdgeId],
                           featureIds: Array[Int],
-                          dimensions: Array[Int])(implicit graph: IGraph) = {
+                          dimensions: Array[Int])(implicit graph: IGraph):Array[Array[Float]] = {
     val featureLen = dimensions.sum
     val features = graph.getEdgeFloatFeature(edges, featureIds)
 
