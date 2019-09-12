@@ -61,30 +61,14 @@ object WalkOps {
   }
 
   def genPair(paths: Array[Array[Long]],
+              pathLen: Int,
+              numPairs: Int,
               leftWinSize: Int,
               rightWinSize: Int): (Array[Array[Long]], Array[Array[Long]]) = {
     val batchSize = paths.length
-    val pathLen = paths(0).length
 
-    var pathCount = pathLen * (leftWinSize + rightWinSize)
-    var i = leftWinSize
-    var j = 0
-    while (i > 0 & j < pathLen) {
-      pathCount -= i
-      i -= 1
-      j += 1
-    }
-
-    i = rightWinSize
-    j = 0
-    while (i > 0 & j < pathLen) {
-      pathCount -= i
-      i -= 1
-      j += 1
-    }
-
-    val src = Array.ofDim[Long](batchSize, pathCount)
-    val tar = Array.ofDim[Long](batchSize, pathCount)
+    val src = Array.ofDim[Long](batchSize, numPairs)
+    val tar = Array.ofDim[Long](batchSize, numPairs)
 
     for (i <- 0 until batchSize) {
       var c = 0
