@@ -28,9 +28,9 @@ class Line[T: ClassTag](nodeType: Int,
                         dim: Int,
                         order: Order,
                         numNegs: Int = 5)
-                       (implicit ev: TensorNumeric[T]) {
+                       (implicit ev: TensorNumeric[T]) extends BaseModel[T]{
 
-  def sample(input: Array[Long], graph: IGraph): Array[Sample[T]] = {
+  override def sample(input: Array[Long], graph: IGraph): Array[Sample[T]] = {
     val batchSize = input.length
     val pos = sampleNeighbor(input, edgeTypes, 1, maxId + 1)(graph)._1
     val neg = sampleNode(nodeType, batchSize * numNegs)(graph)
@@ -52,7 +52,7 @@ class Line[T: ClassTag](nodeType: Int,
     samples
   }
 
-  def buildModel(): Model[T] = {
+  override def buildModel(): Model[T] = {
     val src = Input[T](inputShape = Shape(1))
     val pos = Input[T](inputShape = Shape(1))
     val neg = Input[T](inputShape = Shape(numNegs))

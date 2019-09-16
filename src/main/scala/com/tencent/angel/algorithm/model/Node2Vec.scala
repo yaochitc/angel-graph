@@ -25,11 +25,11 @@ class Node2Vec[T: ClassTag](nodeType: Int,
                             rightWinSize: Int,
                             dim: Int,
                             numNegs: Int = 5)
-                           (implicit ev: TensorNumeric[T]) {
+                           (implicit ev: TensorNumeric[T]) extends BaseModel[T] {
   private val pathLen = walkLen + 1
   private val numPairs = (pathLen - 1 until 0 by -1).map(i => Math.min(i, rightWinSize) + Math.min(i, leftWinSize)).sum
 
-  def sample(input: Array[Long], graph: IGraph): Array[Sample[T]] = {
+  override def sample(input: Array[Long], graph: IGraph): Array[Sample[T]] = {
     val paths = randomWalk(input, edgeTypes, walkLen, p, q)(graph)
     val (src, pos) = genPair(paths, pathLen, numPairs, leftWinSize, rightWinSize)
     val batchSize = input.length
@@ -52,7 +52,7 @@ class Node2Vec[T: ClassTag](nodeType: Int,
     samples
   }
 
-  def buildModel(): Model[T] = {
+  override def buildModel(): Model[T] = {
     val src = Input[T](inputShape = Shape(1))
     val pos = Input[T](inputShape = Shape(1))
     val neg = Input[T](inputShape = Shape(numNegs))
