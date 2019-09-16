@@ -12,20 +12,26 @@ import scala.reflect.ClassTag
 class MeanSparseAggregator[T: ClassTag](dim: Int,
                                         activation: String = "relu",
                                         concat: Boolean = false)
-                                       (implicit ev: TensorNumeric[T]) extends BaseSparseAggregator[T] {
+                                       (implicit ev: TensorNumeric[T]) extends SparseAggregator[T] {
+  private val sumLayer = new KerasLayerWrapper[T](Sum[T, T]())
+  private val maximumLayer = HardTanh[T](minValue = 1e-7,
+    maxValue = Double.MaxValue)
+  private val mmLayer = new KerasLayerWrapper[T](MM[T]())
+  private val divLayer = new KerasLayerWrapper[T](CDivTable[T]())
+  private val inputDenseLayer = Dense(dim, activation = activation, bias = false)
+  private val neighborDenseLayer = Dense(dim, activation = activation, bias = false)
+  private val mergeLayer = if (concat) Merge[T](mode = "concat") else Merge[T](mode = "sum")
+
   override def aggregate(input: ModuleNode[T], neighbor: ModuleNode[T], adj: ModuleNode[T]): ModuleNode[T] = {
-    val degree = new KerasLayerWrapper[T](Sum[T, T]()).inputs(adj)
-    val norm = HardTanh[T](minValue = 1e-7,
-      maxValue = Double.MaxValue).inputs(degree)
+    val degree = sumLayer.inputs(adj)
+    val norm = maximumLayer.inputs(degree)
 
-    val aggregated = new KerasLayerWrapper[T](MM[T]()).inputs(neighbor, degree)
-    val normalized = new KerasLayerWrapper[T](CDivTable[T]()).inputs(aggregated, norm)
+    val aggregated = mmLayer.inputs(neighbor, degree)
+    val normalized = divLayer.inputs(aggregated, norm)
 
-    val inputEmbedding = Dense(dim, activation = activation, bias = false).inputs(input)
-    val neighborEmbedding = Dense(dim, activation = activation, bias = false).inputs(aggregated)
+    val inputEmbedding = inputDenseLayer.inputs(input)
+    val neighborEmbedding = neighborDenseLayer.inputs(aggregated)
 
-    val mode = if (concat) "concat" else "sum"
-
-    Merge[T](mode = mode).inputs(inputEmbedding, neighborEmbedding)
+    mergeLayer.inputs(inputEmbedding, neighborEmbedding)
   }
 }

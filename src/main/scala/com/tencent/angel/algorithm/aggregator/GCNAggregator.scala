@@ -10,12 +10,16 @@ import scala.reflect.ClassTag
 
 class GCNAggregator[T: ClassTag](dim: Int,
                                  activation: String = "relu")
-                                (implicit ev: TensorNumeric[T]) extends BaseAggregator[T] {
+                                (implicit ev: TensorNumeric[T]) extends Aggregator[T] {
+
+  private val mergeLayer = Merge[T](mode = "concat")
+  private val meanLayer = new KerasLayerWrapper[T](Mean[T]())
+  private val denseLayer = Dense(dim, activation = activation, bias = false)
 
   override def aggregate(input: ModuleNode[T], neighbor: ModuleNode[T]): ModuleNode[T] = {
-    val merged = Merge[T](mode = "concat").inputs(ExpandDim(1).inputs(input), neighbor)
-    val aggregated = new KerasLayerWrapper[T](Mean[T]()).inputs(merged)
+    val merged = mergeLayer.inputs(ExpandDim(1).inputs(input), neighbor)
+    val aggregated = meanLayer.inputs(merged)
 
-    Dense(dim, activation = activation, bias = false).inputs(aggregated)
+    denseLayer.inputs(aggregated)
   }
 }

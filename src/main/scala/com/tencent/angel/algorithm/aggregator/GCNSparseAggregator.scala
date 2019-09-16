@@ -12,20 +12,29 @@ import scala.reflect.ClassTag
 class GCNSparseAggregator[T: ClassTag](dim: Int,
                                        activation: String = "relu",
                                        renorm: Boolean = false)
-                                      (implicit ev: TensorNumeric[T]) extends BaseSparseAggregator[T] {
+                                      (implicit ev: TensorNumeric[T]) extends SparseAggregator[T] {
+  private val sumLayer = new KerasLayerWrapper[T](Sum[T, T]())
+  private val mmLayer = new KerasLayerWrapper[T](MM[T]())
+
+  private val addLayer = new KerasLayerWrapper[T](CAddTable[T]())
+  private val maximumLayer = HardTanh[T](minValue = 1e-7,
+    maxValue = Double.MaxValue)
+  private val caddLayer = AddConstant(1)
+  private val divLayer = new KerasLayerWrapper[T](CDivTable[T]())
+
+
   override def aggregate(input: ModuleNode[T], neighbor: ModuleNode[T], adj: ModuleNode[T]): ModuleNode[T] = {
-    val degree = new KerasLayerWrapper[T](Sum[T, T]()).inputs(adj)
-    val aggregated = new KerasLayerWrapper[T](MM[T]()).inputs(neighbor, degree)
+    val degree = sumLayer.inputs(adj)
+    val aggregated = mmLayer.inputs(neighbor, degree)
 
     if (renorm) {
-      val merged = new KerasLayerWrapper[T](CAddTable[T]()).inputs(input, aggregated)
-      val norm = AddConstant(1).inputs(degree)
-      new KerasLayerWrapper[T](CDivTable[T]()).inputs(aggregated, norm)
+      val merged = addLayer.inputs(input, aggregated)
+      val norm = caddLayer.inputs(degree)
+      divLayer.inputs(aggregated, norm)
     } else {
-      val norm = HardTanh[T](minValue = 1e-7,
-        maxValue = Double.MaxValue).inputs(degree)
-      val normalized = new KerasLayerWrapper[T](CDivTable[T]()).inputs(aggregated, norm)
-      new KerasLayerWrapper[T](CAddTable[T]()).inputs(input, normalized)
+      val norm = maximumLayer.inputs(degree)
+      val normalized = divLayer.inputs(aggregated, norm)
+      addLayer.inputs(input, normalized)
     }
   }
 }

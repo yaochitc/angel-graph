@@ -32,7 +32,7 @@ class Line[T: ClassTag](nodeType: Int,
 
   override def sample(input: Array[Long], graph: IGraph): Array[Sample[T]] = {
     val batchSize = input.length
-    val pos = sampleNeighbor(input, edgeTypes, 1, maxId + 1)(graph)._1
+    val (pos, _, _) = sampleNeighbor(input, edgeTypes, 1, maxId + 1)(graph)
     val neg = sampleNode(nodeType, batchSize * numNegs)(graph)
 
     val samples = Array.ofDim[Sample[T]](batchSize)

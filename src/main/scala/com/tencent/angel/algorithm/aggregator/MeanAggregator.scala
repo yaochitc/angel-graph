@@ -11,14 +11,17 @@ import scala.reflect.ClassTag
 class MeanAggregator[T: ClassTag](dim: Int,
                                   activation: String = "relu",
                                   concat: Boolean = false)
-                                 (implicit ev: TensorNumeric[T]) extends BaseAggregator[T] {
+                                 (implicit ev: TensorNumeric[T]) extends Aggregator[T] {
+  private val meanLayer = new KerasLayerWrapper[T](Mean[T]())
+  private val inputDenseLayer = Dense(dim, activation = activation, bias = false)
+  private val neighborDenseLayer = Dense(dim, activation = activation, bias = false)
+  private val mergeLayer = if (concat) Merge[T](mode = "concat") else Merge[T](mode = "sum")
+
   override def aggregate(input: ModuleNode[T], neighbor: ModuleNode[T]): ModuleNode[T] = {
-    val aggregated = new KerasLayerWrapper[T](Mean[T]()).inputs(neighbor)
-    val inputEmbedding = Dense(dim, activation = activation, bias = false).inputs(input)
-    val neighborEmbedding = Dense(dim, activation = activation, bias = false).inputs(aggregated)
+    val aggregated = meanLayer.inputs(neighbor)
+    val inputEmbedding = inputDenseLayer.inputs(input)
+    val neighborEmbedding = neighborDenseLayer.inputs(aggregated)
 
-    val mode = if (concat) "concat" else "sum"
-
-    Merge[T](mode = mode).inputs(inputEmbedding, neighborEmbedding)
+    mergeLayer.inputs(inputEmbedding, neighborEmbedding)
   }
 }
