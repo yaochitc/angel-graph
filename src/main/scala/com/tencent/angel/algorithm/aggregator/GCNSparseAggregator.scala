@@ -3,9 +3,10 @@ package com.tencent.angel.algorithm.aggregator
 import com.intel.analytics.bigdl.nn.Graph.ModuleNode
 import com.intel.analytics.bigdl.nn.keras.KerasLayerWrapper
 import com.intel.analytics.bigdl.nn.ops.Sum
-import com.intel.analytics.bigdl.nn.{CAddTable, CDivTable, MM}
+import com.intel.analytics.bigdl.nn.{CAddTable, CDivTable}
 import com.intel.analytics.bigdl.tensor.TensorNumericMath.TensorNumeric
 import com.intel.analytics.zoo.pipeline.api.keras.layers.{AddConstant, HardTanh}
+import com.tencent.angel.algorithm.nn.SparseMM
 
 import scala.reflect.ClassTag
 
@@ -14,7 +15,7 @@ class GCNSparseAggregator[T: ClassTag](dim: Int,
                                        renorm: Boolean = false)
                                       (implicit ev: TensorNumeric[T]) extends SparseAggregator[T] {
   private val sumLayer = new KerasLayerWrapper[T](Sum[T, T]())
-  private val mmLayer = new KerasLayerWrapper[T](MM[T]())
+  private val mmLayer = new KerasLayerWrapper[T](SparseMM[T]())
 
   private val addLayer = new KerasLayerWrapper[T](CAddTable[T]())
   private val maximumLayer = HardTanh[T](minValue = 1e-7,

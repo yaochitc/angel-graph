@@ -1,6 +1,6 @@
 package com.tencent.angel.algorithm.model
 
-import com.intel.analytics.bigdl.dataset.Sample
+import com.intel.analytics.bigdl.dataset.{MiniBatch, Sample, SparseMiniBatch}
 import com.intel.analytics.bigdl.nn.keras.KerasLayerWrapper
 import com.intel.analytics.bigdl.nn.{MM, Sigmoid}
 import com.intel.analytics.bigdl.tensor.Tensor
@@ -31,7 +31,7 @@ class Line[T: ClassTag](nodeType: Int,
                         numNegs: Int = 5)
                        (implicit ev: TensorNumeric[T]) extends BaseModel[T] {
 
-  override def sample(input: Array[Long], graph: IGraph): Array[Sample[T]] = {
+  override def sample(input: Array[Long], graph: IGraph): MiniBatch[T] = {
     val batchSize = input.length
     val (pos, _, _) = sampleNeighbor(input, edgeTypes, 1, maxId + 1)(graph)
     val neg = sampleNode(nodeType, batchSize * numNegs)(graph)
@@ -50,7 +50,8 @@ class Line[T: ClassTag](nodeType: Int,
       samples(b) = Sample[T](Array(srcTenor, posTenor, negTensor), labelTensor)
     }
 
-    samples
+    val miniBatch = SparseMiniBatch[T](3, 1)
+    miniBatch.set(samples)
   }
 
   override def buildModel(): Model[T] = {

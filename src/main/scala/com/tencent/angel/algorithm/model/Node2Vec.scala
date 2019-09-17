@@ -1,6 +1,6 @@
 package com.tencent.angel.algorithm.model
 
-import com.intel.analytics.bigdl.dataset.Sample
+import com.intel.analytics.bigdl.dataset.{MiniBatch, Sample, SparseMiniBatch}
 import com.intel.analytics.bigdl.nn.keras.KerasLayerWrapper
 import com.intel.analytics.bigdl.nn.{MM, Sigmoid}
 import com.intel.analytics.bigdl.tensor.Tensor
@@ -30,7 +30,7 @@ class Node2Vec[T: ClassTag](nodeType: Int,
   private val pathLen = walkLen + 1
   private val numPairs = (pathLen - 1 until 0 by -1).map(i => Math.min(i, rightWinSize) + Math.min(i, leftWinSize)).sum
 
-  override def sample(input: Array[Long], graph: IGraph): Array[Sample[T]] = {
+  override def sample(input: Array[Long], graph: IGraph): MiniBatch[T] = {
     val paths = randomWalk(input, edgeTypes, walkLen, p, q)(graph)
     val (src, pos) = genPair(paths, pathLen, numPairs, leftWinSize, rightWinSize)
     val batchSize = input.length
@@ -50,7 +50,8 @@ class Node2Vec[T: ClassTag](nodeType: Int,
       samples(b * numPairs + p) = Sample[T](Array(srcTenor, posTenor, negTensor), labelTensor)
     }
 
-    samples
+    val miniBatch = SparseMiniBatch[T](3, 1)
+    miniBatch.set(samples)
   }
 
   override def buildModel(): Model[T] = {

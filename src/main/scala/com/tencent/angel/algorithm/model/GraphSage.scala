@@ -1,6 +1,6 @@
 package com.tencent.angel.algorithm.model
 
-import com.intel.analytics.bigdl.dataset.Sample
+import com.intel.analytics.bigdl.dataset.MiniBatch
 import com.intel.analytics.bigdl.nn.keras.Input
 import com.intel.analytics.bigdl.tensor.TensorNumericMath.TensorNumeric
 import com.intel.analytics.bigdl.utils.Shape
@@ -23,7 +23,7 @@ class GraphSage[T: ClassTag](metapath: Array[Array[Int]],
                             (implicit ev: TensorNumeric[T]) extends BaseModel[T] {
   private val numLayer = fanouts.length
 
-  override def sample(input: Array[Long], graph: IGraph): Array[Sample[T]] = {
+  override def sample(input: Array[Long], graph: IGraph): MiniBatch[T] = {
     val (samples, _, _) = sampleFanout(input, metapath, fanouts)(graph)
     null
   }

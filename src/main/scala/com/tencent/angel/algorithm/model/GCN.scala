@@ -1,6 +1,6 @@
 package com.tencent.angel.algorithm.model
 
-import com.intel.analytics.bigdl.dataset.Sample
+import com.intel.analytics.bigdl.dataset.MiniBatch
 import com.intel.analytics.bigdl.nn.CAddTable
 import com.intel.analytics.bigdl.nn.keras.{Input, KerasLayerWrapper}
 import com.intel.analytics.bigdl.tensor.TensorNumericMath.TensorNumeric
@@ -22,8 +22,9 @@ class GCN[T: ClassTag](metapath: Array[Array[Int]],
                       (implicit ev: TensorNumeric[T]) extends BaseModel[T] {
   private val numLayer = metapath.length
 
-  override def sample(input: Array[Long], graph: IGraph): Array[Sample[T]] = {
+  override def sample(input: Array[Long], graph: IGraph): MiniBatch[T] = {
     val (nodes, adjs) = getMultiHopNeighbor(input, metapath)(graph)
+
     null
   }
 
