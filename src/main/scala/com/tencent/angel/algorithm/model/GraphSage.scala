@@ -24,7 +24,11 @@ class GraphSage[T: ClassTag](metapath: Array[Array[Int]],
   private val numLayer = fanouts.length
 
   override def sample(input: Array[Long], graph: IGraph): MiniBatch[T] = {
-    val (samples, _, _) = sampleFanout(input, metapath, fanouts)(graph)
+    val batchSize = input.length
+    val (nodes, _, _) = sampleFanout(input, metapath, fanouts)(graph)
+    for (layer <- 0 until numLayer; b <- 0 until batchSize) {
+
+    }
     null
   }
 

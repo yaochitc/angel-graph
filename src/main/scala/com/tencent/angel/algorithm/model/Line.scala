@@ -1,6 +1,6 @@
 package com.tencent.angel.algorithm.model
 
-import com.intel.analytics.bigdl.dataset.{MiniBatch, Sample, SparseMiniBatch}
+import com.intel.analytics.bigdl.dataset.{MiniBatch, SparseMiniBatch}
 import com.intel.analytics.bigdl.nn.keras.KerasLayerWrapper
 import com.intel.analytics.bigdl.nn.{MM, Sigmoid}
 import com.intel.analytics.bigdl.tensor.Tensor
@@ -36,22 +36,21 @@ class Line[T: ClassTag](nodeType: Int,
     val (pos, _, _) = sampleNeighbor(input, edgeTypes, 1, maxId + 1)(graph)
     val neg = sampleNode(nodeType, batchSize * numNegs)(graph)
 
-    val samples = Array.ofDim[Sample[T]](batchSize)
+    val srcTenor = Tensor[T](batchSize, 1)
+    val posTenor = Tensor[T](batchSize, 1)
+    val negTensor = Tensor[T](batchSize, 1)
+    val labelTensor = Tensor[T](batchSize, numNegs + 1).zero()
     for (b <- 0 until batchSize) {
-      val srcTenor = Tensor[T](1).setValue(1, ev.fromType(input(b)))
-      val posTenor = Tensor[T](1).setValue(1, ev.fromType(pos(b)(0)))
-      val negTensor = Tensor[T](numNegs)
+      srcTenor.setValue(b, 1, ev.fromType(input(b)))
+      posTenor.setValue(b, 1, ev.fromType(pos(b)(0)))
       for (n <- 0 until numNegs) {
-        negTensor.setValue(n + 1, ev.fromType(neg(b * numNegs + n)))
+        negTensor.setValue(b, n + 1, ev.fromType(neg(b * numNegs + n)))
       }
 
-      val labelTensor = Tensor[T](numNegs + 1).zero().setValue(1, ev.one)
-
-      samples(b) = Sample[T](Array(srcTenor, posTenor, negTensor), labelTensor)
+      labelTensor.setValue(batchSize, 1, ev.one)
     }
 
-    val miniBatch = SparseMiniBatch[T](3, 1)
-    miniBatch.set(samples)
+    new SparseMiniBatch[T](Array(srcTenor, posTenor, negTensor), Array(labelTensor))
   }
 
   override def buildModel(): Model[T] = {

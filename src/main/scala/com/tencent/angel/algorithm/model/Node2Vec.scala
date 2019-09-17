@@ -1,6 +1,6 @@
 package com.tencent.angel.algorithm.model
 
-import com.intel.analytics.bigdl.dataset.{MiniBatch, Sample, SparseMiniBatch}
+import com.intel.analytics.bigdl.dataset.{MiniBatch, SparseMiniBatch}
 import com.intel.analytics.bigdl.nn.keras.KerasLayerWrapper
 import com.intel.analytics.bigdl.nn.{MM, Sigmoid}
 import com.intel.analytics.bigdl.tensor.Tensor
@@ -10,8 +10,8 @@ import com.intel.analytics.zoo.pipeline.api.keras.layers.{Input, Merge}
 import com.intel.analytics.zoo.pipeline.api.keras.models.Model
 import com.tencent.angel.algorithm.encoder.ShallowEncoder
 import com.tencent.angel.graph.client.IGraph
-import com.tencent.angel.graph.ops.WalkOps._
 import com.tencent.angel.graph.ops.SampleOps._
+import com.tencent.angel.graph.ops.WalkOps._
 
 import scala.reflect.ClassTag
 
@@ -36,22 +36,22 @@ class Node2Vec[T: ClassTag](nodeType: Int,
     val batchSize = input.length
     val neg = sampleNode(nodeType, batchSize * numPairs * numNegs)(graph)
 
-    val samples = Array.ofDim[Sample[T]](batchSize * numPairs)
+    val srcTenor = Tensor[T](batchSize * numPairs, 1)
+    val posTenor = Tensor[T](batchSize * numPairs, 1)
+    val negTensor = Tensor[T](batchSize * numPairs, 1)
+    val labelTensor = Tensor[T](batchSize * numPairs, numNegs + 1).zero()
+
     for (b <- 0 until batchSize; p <- 0 until numPairs) {
-      val srcTenor = Tensor[T](1).setValue(1, ev.fromType(src(b)(p)))
-      val posTenor = Tensor[T](1).setValue(1, ev.fromType(pos(b)(p)))
-      val negTensor = Tensor[T](numNegs)
+      srcTenor.setValue(b * numPairs + p, 1, ev.fromType(src(b)(p)))
+      posTenor.setValue(b * numPairs + p, 1, ev.fromType(pos(b)(p)))
       for (n <- 0 until numNegs) {
-        negTensor.setValue(n + 1, ev.fromType(neg(b * numPairs + p * numNegs + n)))
+        negTensor.setValue(b * numPairs + p, n + 1, ev.fromType(neg(b * numPairs + p * numNegs + n)))
       }
 
-      val labelTensor = Tensor[T](numNegs + 1).zero().setValue(1, ev.one)
-
-      samples(b * numPairs + p) = Sample[T](Array(srcTenor, posTenor, negTensor), labelTensor)
+      labelTensor.setValue(batchSize * numPairs, 1, ev.one)
     }
 
-    val miniBatch = SparseMiniBatch[T](3, 1)
-    miniBatch.set(samples)
+    new SparseMiniBatch[T](Array(srcTenor, posTenor, negTensor), Array(labelTensor))
   }
 
   override def buildModel(): Model[T] = {
