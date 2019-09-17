@@ -7,9 +7,9 @@ import com.intel.analytics.zoo.pipeline.api.keras.layers._
 import scala.reflect.ClassTag
 
 class ShallowEncoder[T: ClassTag](maxId: Int,
-                                  dim: Int)
+                                  embeddingDim: Int)
                                  (implicit ev: TensorNumeric[T]) extends BaseEncoder[T] {
-  private val embedding = Embedding[T](maxId, dim)
+  private val embedding = Embedding[T](maxId, embeddingDim)
 
   override def encode(input: ModuleNode[T]): ModuleNode[T] = {
     embedding.inputs(input)
@@ -17,7 +17,7 @@ class ShallowEncoder[T: ClassTag](maxId: Int,
 }
 
 object ShallowEncoder {
-  def apply[T: ClassTag](maxId: Int, dim: Int)(implicit ev: TensorNumeric[T]): ShallowEncoder[T] = {
-    new ShallowEncoder[T](maxId, dim)
+  def apply[T: ClassTag](maxId: Int, embeddingDim: Int)(implicit ev: TensorNumeric[T]): ShallowEncoder[T] = {
+    new ShallowEncoder[T](maxId, embeddingDim)
   }
 }

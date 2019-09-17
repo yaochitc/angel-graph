@@ -25,7 +25,7 @@ object Order extends Enumeration {
 class Line[T: ClassTag](nodeType: Int,
                         edgeTypes: Array[Int],
                         maxId: Int,
-                        dim: Int,
+                        embeddingDim: Int,
                         order: Order,
                         numNegs: Int = 5)
                        (implicit ev: TensorNumeric[T]) extends BaseModel[T]{
@@ -57,11 +57,11 @@ class Line[T: ClassTag](nodeType: Int,
     val pos = Input[T](inputShape = Shape(1))
     val neg = Input[T](inputShape = Shape(numNegs))
 
-    val targetEncoder = ShallowEncoder[T](maxId, dim)
+    val targetEncoder = ShallowEncoder[T](maxId, embeddingDim)
 
     val contextEncoder = order match {
       case Order.First => targetEncoder
-      case Order.Second => ShallowEncoder[T](maxId, dim)
+      case Order.Second => ShallowEncoder[T](maxId, embeddingDim)
     }
 
     val srcEmbedding = targetEncoder.encode(src)
