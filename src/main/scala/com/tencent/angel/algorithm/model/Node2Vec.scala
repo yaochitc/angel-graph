@@ -18,6 +18,7 @@ import scala.reflect.ClassTag
 class Node2Vec[T: ClassTag](nodeType: Int,
                             edgeTypes: Array[Int],
                             maxId: Int,
+                            dim: Int,
                             walkLen: Int,
                             p: Float,
                             q: Float,
@@ -57,8 +58,8 @@ class Node2Vec[T: ClassTag](nodeType: Int,
     val pos = Input[T](inputShape = Shape(1))
     val neg = Input[T](inputShape = Shape(numNegs))
 
-    val targetEncoder = ShallowEncoder[T](maxId, embeddingDim)
-    val contextEncoder = ShallowEncoder[T](maxId, embeddingDim)
+    val targetEncoder = ShallowEncoder[T](dim, maxId, embeddingDim)
+    val contextEncoder = ShallowEncoder[T](dim, maxId, embeddingDim)
 
     val srcEmbedding = targetEncoder.encode(src)
     val posEmbedding = contextEncoder.encode(pos)

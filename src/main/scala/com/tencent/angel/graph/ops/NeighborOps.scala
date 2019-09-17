@@ -49,6 +49,8 @@ object NeighborOps {
     val neighborWeightsBuffer = ArrayBuffer[Array[Float]]()
     val neighborEdgeTypesBuffer = ArrayBuffer[Array[Int]]()
 
+    neighborIdsBuffer += nodes
+
     var lastNeighborIds = nodes
     for ((hopEdgeTypes, count) <- edgeTypes zip counts) {
       val (neighborIds, neighborWeights, neighborEdgeTypes) = sampleNeighbor(lastNeighborIds, hopEdgeTypes, count)

@@ -12,7 +12,7 @@ class MaxPoolAggregator[T: ClassTag](dim: Int,
                                      activation: String = "relu",
                                      concat: Boolean = false)
                                     (implicit ev: TensorNumeric[T]) extends Aggregator[T] {
-  private val poolLayer = Dense(dim, activation = activation)
+  private val poolLayer = Dense(dim, activation = "relu")
   private val maxLayer = new KerasLayerWrapper[T](Max[T]())
   private val inputDenseLayer = Dense(dim, activation = activation, bias = false)
   private val neighborDenseLayer = Dense(dim, activation = activation, bias = false)

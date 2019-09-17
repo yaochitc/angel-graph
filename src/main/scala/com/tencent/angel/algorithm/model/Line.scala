@@ -25,10 +25,11 @@ object Order extends Enumeration {
 class Line[T: ClassTag](nodeType: Int,
                         edgeTypes: Array[Int],
                         maxId: Int,
+                        dim: Int,
                         embeddingDim: Int,
                         order: Order,
                         numNegs: Int = 5)
-                       (implicit ev: TensorNumeric[T]) extends BaseModel[T]{
+                       (implicit ev: TensorNumeric[T]) extends BaseModel[T] {
 
   override def sample(input: Array[Long], graph: IGraph): Array[Sample[T]] = {
     val batchSize = input.length
@@ -57,11 +58,11 @@ class Line[T: ClassTag](nodeType: Int,
     val pos = Input[T](inputShape = Shape(1))
     val neg = Input[T](inputShape = Shape(numNegs))
 
-    val targetEncoder = ShallowEncoder[T](maxId, embeddingDim)
+    val targetEncoder = ShallowEncoder[T](dim, maxId, embeddingDim)
 
     val contextEncoder = order match {
       case Order.First => targetEncoder
-      case Order.Second => ShallowEncoder[T](maxId, embeddingDim)
+      case Order.Second => ShallowEncoder[T](dim, maxId, embeddingDim)
     }
 
     val srcEmbedding = targetEncoder.encode(src)
