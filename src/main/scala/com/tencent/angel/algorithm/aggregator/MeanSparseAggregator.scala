@@ -26,7 +26,7 @@ class MeanSparseAggregator[T: ClassTag](dim: Int,
     val degree = sumLayer.inputs(adj)
     val norm = maximumLayer.inputs(degree)
 
-    val aggregated = mmLayer.inputs(neighbor, degree)
+    val aggregated = mmLayer.inputs(neighbor, adj)
     val normalized = divLayer.inputs(aggregated, norm)
 
     val inputEmbedding = inputDenseLayer.inputs(input)

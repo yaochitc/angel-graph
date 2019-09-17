@@ -25,7 +25,7 @@ class GCNSparseAggregator[T: ClassTag](dim: Int,
 
   override def aggregate(input: ModuleNode[T], neighbor: ModuleNode[T], adj: ModuleNode[T]): ModuleNode[T] = {
     val degree = sumLayer.inputs(adj)
-    val aggregated = mmLayer.inputs(neighbor, degree)
+    val aggregated = mmLayer.inputs(neighbor, adj)
 
     if (renorm) {
       val merged = addLayer.inputs(input, aggregated)
