@@ -38,7 +38,7 @@ class Line[T: ClassTag](nodeType: Int,
 
     val srcTenor = Tensor[T](batchSize, 1)
     val posTenor = Tensor[T](batchSize, 1)
-    val negTensor = Tensor[T](batchSize, 1)
+    val negTensor = Tensor[T](batchSize, numNegs)
     val labelTensor = Tensor[T](batchSize, numNegs + 1).zero()
     for (b <- 0 until batchSize) {
       srcTenor.setValue(b, 1, ev.fromType(input(b)))

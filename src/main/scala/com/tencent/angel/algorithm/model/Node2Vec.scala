@@ -38,7 +38,7 @@ class Node2Vec[T: ClassTag](nodeType: Int,
 
     val srcTenor = Tensor[T](batchSize * numPairs, 1)
     val posTenor = Tensor[T](batchSize * numPairs, 1)
-    val negTensor = Tensor[T](batchSize * numPairs, 1)
+    val negTensor = Tensor[T](batchSize * numPairs, numNegs)
     val labelTensor = Tensor[T](batchSize * numPairs, numNegs + 1).zero()
 
     for (b <- 0 until batchSize; p <- 0 until numPairs) {
