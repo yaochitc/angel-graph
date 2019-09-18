@@ -9,7 +9,7 @@ import scala.reflect.ClassTag
 class ShallowEncoder[T: ClassTag](dim: Int,
                                   maxId: Int,
                                   embeddingDim: Int)
-                                 (implicit ev: TensorNumeric[T]) extends BaseEncoder[T] {
+                                 (implicit ev: TensorNumeric[T]) extends BaseEncoder[T, ModuleNode[T]] {
   private val embeddingLayer = Embedding[T](maxId, embeddingDim)
   private val denseLayer = Dense(dim, bias = false)
 

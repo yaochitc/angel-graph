@@ -1,13 +1,13 @@
 package com.tencent.angel.algorithm.model
 
 import com.intel.analytics.bigdl.dataset.MiniBatch
-import com.intel.analytics.bigdl.nn.CAddTable
 import com.intel.analytics.bigdl.nn.keras.{Input, KerasLayerWrapper}
+import com.intel.analytics.bigdl.nn.{MM, Sigmoid}
 import com.intel.analytics.bigdl.tensor.TensorNumericMath.TensorNumeric
+import com.intel.analytics.zoo.pipeline.api.keras.layers.Merge
 import com.intel.analytics.zoo.pipeline.api.keras.models.Model
-import com.tencent.angel.algorithm.aggregator.SparseAggregator
 import com.tencent.angel.algorithm.aggregator.SparseAggregatorType.SparseAggregatorType
-import com.tencent.angel.algorithm.encoder.ShallowEncoder
+import com.tencent.angel.algorithm.encoder.GCNEncoder
 import com.tencent.angel.graph.client.IGraph
 import com.tencent.angel.graph.ops.NeighborOps.getMultiHopNeighbor
 
@@ -31,28 +31,19 @@ class GCN[T: ClassTag](metapath: Array[Array[Int]],
   override def buildModel(): Model[T] = {
     val inputs = (0 until numLayer + 1).map(_ => Input[T]())
     val adjs = (0 until numLayer).map(_ => Input[T]())
-    val aggregators = (0 until numLayer).map(i => {
-      val activation = if (i < numLayer - 1) "relu" else null
-      SparseAggregator(aggregatorType, dim, activation)
-    })
 
-    val nodeEncoder = ShallowEncoder[T](dim, maxId, embeddingDim)
+    val contextEncoder = new GCNEncoder[T](numLayer, dim, aggregatorType, maxId, embeddingDim, useResidual)
+    val targetEncoder = new GCNEncoder[T](numLayer, dim, aggregatorType, maxId, embeddingDim, useResidual)
 
-    var hidden = inputs.map(input => nodeEncoder.encode(input))
-    for (layer <- 0 until numLayer) {
-      val aggregator = aggregators(layer)
-      hidden = (0 until numLayer - layer)
-        .map(hop => {
-          val aggregated = aggregator.aggregate(hidden(hop), hidden(hop + 1), adjs(hop))
-          if (useResidual) {
-            val addLayer = new KerasLayerWrapper[T](CAddTable[T]())
-            addLayer.inputs(hidden(hop), aggregated)
-          } else {
-            aggregated
-          }
-        })
-    }
+    val srcEmbedding = targetEncoder.encode(inputs, adjs)
+    val posEmbedding = contextEncoder.encode(inputs, adjs)
+    val negEmbedding = contextEncoder.encode(inputs, adjs)
 
-    Model((inputs ++ adjs).toArray, hidden(0))
+    val posLogit = new KerasLayerWrapper[T](MM[T]()).inputs(srcEmbedding, posEmbedding)
+    val negLogit = new KerasLayerWrapper[T](MM[T]()).inputs(srcEmbedding, negEmbedding)
+
+    val logit = Merge[T](mode = "concat").inputs(posLogit, negLogit)
+    val output = new KerasLayerWrapper[T](Sigmoid[T]()).inputs(logit)
+    Model((inputs ++ adjs).toArray, output)
   }
 }
