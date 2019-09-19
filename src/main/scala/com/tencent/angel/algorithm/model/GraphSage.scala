@@ -52,18 +52,18 @@ class GraphSage[T: ClassTag](nodeType: Int,
     val (nodes, _, _) = sampleFanout(samples, metapath, fanouts)(graph)
     val sampleSize = samples.length
     val batchSize = sampleSize / numSamples
-    val featureTensors = (0 until numLayer + 1).map(i => Tensor[T](batchSize, countPerLayer(i), numSamples))
+    val featureTensors = (0 until numLayer + 1).map(i => Tensor[T](batchSize, countPerLayer(i) * numSamples))
 
     for (i <- 0 until numLayer + 1; b <- 0 until batchSize; n <- numSamples; count <- 0 until countPerLayer(i)) {
-      featureTensors(i).setValue(b, count, n, ev.fromType(nodes(i)((b * numSamples + n) * countPerLayer(i) + count)))
+      featureTensors(i).setValue(b, ev.fromType(nodes(i)((b * numSamples + n) * countPerLayer(i) + count)))
     }
     featureTensors.toArray
   }
 
   override def buildModel(): Model[T] = {
-    val srcTensors = countPerLayer.map(count => Input[T](inputShape = Shape(count, 1)))
-    val posTensors = countPerLayer.map(count => Input[T](inputShape = Shape(count, 1)))
-    val negTensors = countPerLayer.map(count => Input[T](inputShape = Shape(count, numNegs)))
+    val srcTensors = countPerLayer.map(count => Input[T](inputShape = Shape(count)))
+    val posTensors = countPerLayer.map(count => Input[T](inputShape = Shape(count)))
+    val negTensors = countPerLayer.map(count => Input[T](inputShape = Shape(count * numNegs)))
 
     val contextEncoder = new SageEncoder[T](numLayer, dim, aggregatorType, concat, maxId, embeddingDim)
     val targetEncoder = new SageEncoder[T](numLayer, dim, aggregatorType, concat, maxId, embeddingDim)
