@@ -5,6 +5,7 @@ import com.intel.analytics.bigdl.nn.Graph.ModuleNode
 import com.intel.analytics.bigdl.nn.SoftMax
 import com.intel.analytics.bigdl.nn.keras.{Input, KerasLayerWrapper}
 import com.intel.analytics.bigdl.tensor.TensorNumericMath.TensorNumeric
+import com.intel.analytics.bigdl.utils.Shape
 import com.intel.analytics.zoo.pipeline.api.keras.layers.Dense
 import com.intel.analytics.zoo.pipeline.api.keras.models.Model
 import com.tencent.angel.algorithm.aggregator.SparseAggregatorType.SparseAggregatorType
@@ -35,7 +36,7 @@ class GCN[T: ClassTag](metapath: Array[Array[Int]],
   override def buildModel(): Model[T] = {
     val numSparseFeatures = sparseFeatureMaxIds.length
     val nodes = (0 until numLayer + 1).map(_ => {
-      (Input[T](), Input[T](), (0 until numSparseFeatures).map(_ => Input[T]()))
+      (Input[T](), Input[T](Shape(denseFeatureDim)), (0 until numSparseFeatures).map(i => Input[T](Shape(sparseFeatureMaxIds(i)))))
     }).toArray
     val adjs = (0 until numLayer).map(_ => Input[T]()).toArray
 

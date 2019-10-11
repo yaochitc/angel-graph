@@ -66,13 +66,13 @@ class GraphSage[T: ClassTag](nodeType: Int,
   override def buildModel(): Model[T] = {
     val numSparseFeatures = sparseFeatureMaxIds.length
     val srcTensors = countPerLayer.map(count =>
-      (Input[T](inputShape = Shape(count)), Input[T](), (0 until numSparseFeatures).map(_ => Input[T]()))
+      (Input[T](inputShape = Shape(count)), Input[T](Shape(denseFeatureDim)), (0 until numSparseFeatures).map(i => Input[T](Shape(sparseFeatureMaxIds(i)))))
     )
     val posTensors = countPerLayer.map(count =>
-      (Input[T](inputShape = Shape(count)), Input[T](), (0 until numSparseFeatures).map(_ => Input[T]()))
+      (Input[T](inputShape = Shape(count)), Input[T](Shape(denseFeatureDim)), (0 until numSparseFeatures).map(i => Input[T](Shape(sparseFeatureMaxIds(i)))))
     )
     val negTensors = countPerLayer.map(count =>
-      (Input[T](inputShape = Shape(count * numNegs)), Input[T](), (0 until numSparseFeatures).map(_ => Input[T]()))
+      (Input[T](inputShape = Shape(count * numNegs)), Input[T](Shape(denseFeatureDim)), (0 until numSparseFeatures).map(i => Input[T](Shape(sparseFeatureMaxIds(i)))))
     )
 
     val contextEncoder = new SageEncoder[T](numLayer, dim, aggregatorType, concat, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)

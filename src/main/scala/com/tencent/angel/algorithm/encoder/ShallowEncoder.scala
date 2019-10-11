@@ -13,6 +13,8 @@ class ShallowEncoder[T: ClassTag](dim: Int,
                                   denseFeatureDim: Int,
                                   sparseFeatureMaxIds: Array[Int])
                                  (implicit ev: TensorNumeric[T]) extends BaseEncoder[T, (ModuleNode[T], ModuleNode[T], Seq[ModuleNode[T]])] {
+
+  private val sparseEmbeddingLayers = sparseFeatureMaxIds.map(sparseFeatureMaxId => ReusableLayer[T](SparseEmbedding[T](sparseFeatureMaxId, embeddingDim), hasGradInput = false))
   private val embeddingLayer = ReusableLayer[T](Embedding[T](maxId, embeddingDim), hasGradInput = false)
   private val denseLayer = ReusableLayer[T](Dense(dim, bias = false))
 
