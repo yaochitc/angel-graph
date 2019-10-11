@@ -1,6 +1,7 @@
 package com.tencent.angel.algorithm.model
 
 import com.intel.analytics.bigdl.dataset.{MiniBatch, SparseMiniBatch}
+import com.intel.analytics.bigdl.nn.Graph.ModuleNode
 import com.intel.analytics.bigdl.nn.keras.{Input, KerasLayerWrapper}
 import com.intel.analytics.bigdl.nn.{MM, Sigmoid}
 import com.intel.analytics.bigdl.tensor.Tensor
@@ -63,9 +64,16 @@ class GraphSage[T: ClassTag](nodeType: Int,
   }
 
   override def buildModel(): Model[T] = {
-    val srcTensors = countPerLayer.map(count => Input[T](inputShape = Shape(count)))
-    val posTensors = countPerLayer.map(count => Input[T](inputShape = Shape(count)))
-    val negTensors = countPerLayer.map(count => Input[T](inputShape = Shape(count * numNegs)))
+    val numSparseFeatures = sparseFeatureMaxIds.length
+    val srcTensors = countPerLayer.map(count =>
+      (Input[T](inputShape = Shape(count)), Input[T](), (0 until numSparseFeatures).map(_ => Input[T]()))
+    )
+    val posTensors = countPerLayer.map(count =>
+      (Input[T](inputShape = Shape(count)), Input[T](), (0 until numSparseFeatures).map(_ => Input[T]()))
+    )
+    val negTensors = countPerLayer.map(count =>
+      (Input[T](inputShape = Shape(count * numNegs)), Input[T](), (0 until numSparseFeatures).map(_ => Input[T]()))
+    )
 
     val contextEncoder = new SageEncoder[T](numLayer, dim, aggregatorType, concat, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
     val targetEncoder = new SageEncoder[T](numLayer, dim, aggregatorType, concat, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
@@ -79,6 +87,29 @@ class GraphSage[T: ClassTag](nodeType: Int,
 
     val logit = Merge[T](mode = "concat").inputs(posLogit, negLogit)
     val output = new KerasLayerWrapper[T](Sigmoid[T]()).inputs(logit)
-    Model(srcTensors ++ posTensors ++ negTensors, output)
+
+    val inputs = Array.ofDim[ModuleNode[T]]((numLayer + 1) * (2 + numSparseFeatures) * 3)
+    for (i <- 0 until numLayer + 1) {
+      inputs(3 * i) = srcTensors(i)._1
+      inputs(3 * i + 1) = srcTensors(i)._2
+
+      for (j <- srcTensors(i)._3.indices) {
+        inputs(3 * i + 2 + j) = srcTensors(i)._3(j)
+      }
+
+      inputs((numLayer + 1) * 3 + 3 * i) = posTensors(i)._1
+      inputs((numLayer + 1) * 3 + 3 * i + 1) = posTensors(i)._2
+      for (j <- posTensors(i)._3.indices) {
+        inputs((numLayer + 1) * 3 + 3 * i + 2 + j) = posTensors(i)._3(j)
+      }
+
+      inputs((numLayer + 1) * 3 * 2 + 3 * i) = negTensors(i)._1
+      inputs((numLayer + 1) * 3 * 2 + 3 * i + 1) = negTensors(i)._2
+      for (j <- negTensors(i)._3.indices) {
+        inputs((numLayer + 1) * 3 * 2 + 3 * i + 2 + j) = negTensors(i)._3(j)
+      }
+    }
+
+    Model(inputs, output)
   }
 }

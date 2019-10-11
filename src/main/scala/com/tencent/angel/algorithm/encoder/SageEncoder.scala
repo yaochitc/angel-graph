@@ -15,7 +15,7 @@ class SageEncoder[T: ClassTag](numLayer: Int,
                                embeddingDim: Int,
                                denseFeatureDim: Int,
                                sparseFeatureMaxIds: Array[Int])
-                              (implicit ev: TensorNumeric[T]) extends BaseEncoder[T, Seq[ModuleNode[T]]] {
+                              (implicit ev: TensorNumeric[T]) extends BaseEncoder[T, Seq[(ModuleNode[T], ModuleNode[T], Seq[ModuleNode[T]])]] {
   private val nodeEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
 
   private val aggregators = (0 until numLayer).map(i => {
@@ -23,7 +23,7 @@ class SageEncoder[T: ClassTag](numLayer: Int,
     Aggregator(aggregatorType, dim, activation, concat)
   })
 
-  override def encode(inputs: Seq[ModuleNode[T]], namePrefix: String, isReplica: Boolean): ModuleNode[T] = {
+  override def encode(inputs: Seq[(ModuleNode[T], ModuleNode[T], Seq[ModuleNode[T]])], namePrefix: String, isReplica: Boolean): ModuleNode[T] = {
     var hidden = inputs.map(node => nodeEncoder.encode(node, namePrefix, isReplica))
     for (layer <- 0 until numLayer) {
       val aggregator = aggregators(layer)

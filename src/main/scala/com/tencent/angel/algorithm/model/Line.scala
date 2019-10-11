@@ -61,14 +61,14 @@ class Line[T: ClassTag](nodeType: Int,
     val neg = Input[T](inputShape = Shape(numNegs))
 
     val targetEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
-    val srcEmbedding = targetEncoder.encode(src, "src", isReplica = false)
+    val srcEmbedding = targetEncoder.encode((src, null, null), "src", isReplica = false)
 
     val (posEmbedding, negEmbedding) = order match {
       case Order.First =>
-        (targetEncoder.encode(pos, "pos", isReplica = true), targetEncoder.encode(neg, "neg", isReplica = true))
+        (targetEncoder.encode((pos, null, null), "pos", isReplica = true), targetEncoder.encode((neg, null, null), "neg", isReplica = true))
       case Order.Second =>
         val contextEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
-        (contextEncoder.encode(pos, "pos", isReplica = false), contextEncoder.encode(neg, "neg", isReplica = true))
+        (contextEncoder.encode((pos, null, null), "pos", isReplica = false), contextEncoder.encode((neg, null, null), "neg", isReplica = true))
     }
 
     val posLogit = new KerasLayerWrapper[T](MM[T]()).inputs(srcEmbedding, posEmbedding)

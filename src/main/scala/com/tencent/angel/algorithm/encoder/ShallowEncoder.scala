@@ -12,12 +12,13 @@ class ShallowEncoder[T: ClassTag](dim: Int,
                                   embeddingDim: Int,
                                   denseFeatureDim: Int,
                                   sparseFeatureMaxIds: Array[Int])
-                                 (implicit ev: TensorNumeric[T]) extends BaseEncoder[T, ModuleNode[T]] {
+                                 (implicit ev: TensorNumeric[T]) extends BaseEncoder[T, (ModuleNode[T], ModuleNode[T], Seq[ModuleNode[T]])] {
   private val embeddingLayer = ReusableLayer[T](Embedding[T](maxId, embeddingDim), hasGradInput = false)
   private val denseLayer = ReusableLayer[T](Dense(dim, bias = false))
 
-  override def encode(input: ModuleNode[T], namePrefix: String, isReplica: Boolean): ModuleNode[T] = {
-    val embedding = embeddingLayer.copy(namePrefix + "_embedding", isReplica).inputs(input)
+  override def encode(input: (ModuleNode[T], ModuleNode[T], Seq[ModuleNode[T]]), namePrefix: String, isReplica: Boolean): ModuleNode[T] = {
+    val (id, feature, sparseFeature) = input
+    val embedding = embeddingLayer.copy(namePrefix + "_embedding", isReplica).inputs(id)
     denseLayer.copy(namePrefix + "_dense", isReplica).inputs(embedding)
   }
 }

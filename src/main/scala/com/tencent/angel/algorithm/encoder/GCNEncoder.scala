@@ -17,7 +17,9 @@ class GCNEncoder[T: ClassTag](numLayer: Int,
                               denseFeatureDim: Int,
                               sparseFeatureMaxIds: Array[Int],
                               useResidual: Boolean)
-                             (implicit ev: TensorNumeric[T]) extends BaseEncoder[T, (Seq[ModuleNode[T]], Seq[ModuleNode[T]])] {
+                             (implicit ev: TensorNumeric[T])
+  extends BaseEncoder[T, (Seq[(ModuleNode[T], ModuleNode[T], Seq[ModuleNode[T]])], Seq[ModuleNode[T]])] {
+
   private val nodeEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
 
   private val aggregators = (0 until numLayer).map(i => {
@@ -25,7 +27,7 @@ class GCNEncoder[T: ClassTag](numLayer: Int,
     SparseAggregator(aggregatorType, dim, activation)
   })
 
-  override def encode(input: (Seq[ModuleNode[T]], Seq[ModuleNode[T]]),
+  override def encode(input: (Seq[(ModuleNode[T], ModuleNode[T], Seq[ModuleNode[T]])], Seq[ModuleNode[T]]),
                       namePrefix: String,
                       isReplica: Boolean): ModuleNode[T] = {
     val (nodes, adjs) = input

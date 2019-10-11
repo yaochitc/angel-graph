@@ -64,9 +64,9 @@ class Node2Vec[T: ClassTag](nodeType: Int,
     val targetEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
     val contextEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
 
-    val srcEmbedding = targetEncoder.encode(src, "src", isReplica = false)
-    val posEmbedding = contextEncoder.encode(pos, "pos", isReplica = true)
-    val negEmbedding = contextEncoder.encode(neg, "neg", isReplica = true)
+    val srcEmbedding = targetEncoder.encode((src, null, null), "src", isReplica = false)
+    val posEmbedding = contextEncoder.encode((pos, null, null), "pos", isReplica = true)
+    val negEmbedding = contextEncoder.encode((neg, null, null), "neg", isReplica = true)
 
     val posLogit = new KerasLayerWrapper[T](MM[T]()).inputs(srcEmbedding, posEmbedding)
     val negLogit = new KerasLayerWrapper[T](MM[T]()).inputs(srcEmbedding, negEmbedding)
