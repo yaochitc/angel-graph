@@ -54,7 +54,7 @@ class GraphSage[T: ClassTag](nodeType: Int,
     val batchSize = sampleSize / numSamples
     val featureTensors = (0 until numLayer + 1).map(i => Tensor[T](batchSize, countPerLayer(i) * numSamples))
 
-    for (i <- 0 until numLayer + 1; b <- 0 until batchSize; n <- numSamples; count <- 0 until countPerLayer(i)) {
+    for (i <- 0 until numLayer + 1; b <- 0 until batchSize; n <- 0 until numSamples; count <- 0 until countPerLayer(i)) {
       featureTensors(i).setValue(b, ev.fromType(nodes(i)((b * numSamples + n) * countPerLayer(i) + count)))
     }
     featureTensors.toArray

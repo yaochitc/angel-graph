@@ -23,9 +23,11 @@ class GCNEncoder[T: ClassTag](numLayer: Int,
     SparseAggregator(aggregatorType, dim, activation)
   })
 
-  override def encode(input: (Seq[ModuleNode[T]], Seq[ModuleNode[T]])): ModuleNode[T] = {
+  override def encode(input: (Seq[ModuleNode[T]], Seq[ModuleNode[T]]),
+                      namePrefix: String,
+                      isReplica: Boolean): ModuleNode[T] = {
     val (nodes, adjs) = input
-    var hidden = nodes.map(node => nodeEncoder.encode(node))
+    var hidden = nodes.map(node => nodeEncoder.encode(node, namePrefix, isReplica))
     for (layer <- 0 until numLayer) {
       val aggregator = aggregators(layer)
       hidden = (0 until numLayer - layer)

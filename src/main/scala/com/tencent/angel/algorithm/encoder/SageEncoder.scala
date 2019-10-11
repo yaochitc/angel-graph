@@ -21,8 +21,8 @@ class SageEncoder[T: ClassTag](numLayer: Int,
     Aggregator(aggregatorType, dim, activation, concat)
   })
 
-  override def encode(inputs: Seq[ModuleNode[T]]): ModuleNode[T] = {
-    var hidden = inputs.map(node => nodeEncoder.encode(node))
+  override def encode(inputs: Seq[ModuleNode[T]], namePrefix: String, isReplica: Boolean): ModuleNode[T] = {
+    var hidden = inputs.map(node => nodeEncoder.encode(node, namePrefix, isReplica))
     for (layer <- 0 until numLayer) {
       val aggregator = aggregators(layer)
       hidden = (0 until numLayer - layer)
