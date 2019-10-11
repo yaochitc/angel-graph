@@ -25,6 +25,8 @@ class GraphSage[T: ClassTag](nodeType: Int,
                              concat: Boolean,
                              maxId: Int,
                              embeddingDim: Int,
+                             denseFeatureDim: Int,
+                             sparseFeatureMaxIds: Array[Int],
                              numNegs: Int = 5)
                             (implicit ev: TensorNumeric[T]) extends BaseModel[T] {
   private val countPerLayer = fanouts.scanLeft(1) { case (acc, item) => acc * item }
@@ -65,8 +67,8 @@ class GraphSage[T: ClassTag](nodeType: Int,
     val posTensors = countPerLayer.map(count => Input[T](inputShape = Shape(count)))
     val negTensors = countPerLayer.map(count => Input[T](inputShape = Shape(count * numNegs)))
 
-    val contextEncoder = new SageEncoder[T](numLayer, dim, aggregatorType, concat, maxId, embeddingDim)
-    val targetEncoder = new SageEncoder[T](numLayer, dim, aggregatorType, concat, maxId, embeddingDim)
+    val contextEncoder = new SageEncoder[T](numLayer, dim, aggregatorType, concat, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
+    val targetEncoder = new SageEncoder[T](numLayer, dim, aggregatorType, concat, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
 
     val srcEmbedding = targetEncoder.encode(srcTensors)
     val posEmbedding = contextEncoder.encode(posTensors, "pos", isReplica = false)

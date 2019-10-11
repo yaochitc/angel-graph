@@ -18,6 +18,8 @@ class GCN[T: ClassTag](metapath: Array[Array[Int]],
                        dim: Int,
                        maxId: Int,
                        embeddingDim: Int,
+                       denseFeatureDim: Int,
+                       sparseFeatureMaxIds: Array[Int],
                        numClasses: Int,
                        useResidual: Boolean = false)
                       (implicit ev: TensorNumeric[T]) extends BaseModel[T] {
@@ -33,7 +35,7 @@ class GCN[T: ClassTag](metapath: Array[Array[Int]],
     val inputs = (0 until numLayer + 1).map(_ => Input[T]()).toArray
     val adjs = (0 until numLayer).map(_ => Input[T]()).toArray
 
-    val encoder = new GCNEncoder[T](numLayer, dim, aggregatorType, maxId, embeddingDim, useResidual)
+    val encoder = new GCNEncoder[T](numLayer, dim, aggregatorType, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds, useResidual)
     val embedding = encoder.encode(inputs, adjs)
 
     val logit = Dense[T](numClasses).inputs(embedding)

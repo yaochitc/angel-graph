@@ -12,9 +12,11 @@ class SageEncoder[T: ClassTag](numLayer: Int,
                                aggregatorType: AggregatorType,
                                concat: Boolean,
                                maxId: Int,
-                               embeddingDim: Int)
+                               embeddingDim: Int,
+                               denseFeatureDim: Int,
+                               sparseFeatureMaxIds: Array[Int])
                               (implicit ev: TensorNumeric[T]) extends BaseEncoder[T, Seq[ModuleNode[T]]] {
-  private val nodeEncoder = ShallowEncoder[T](dim, maxId, embeddingDim)
+  private val nodeEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
 
   private val aggregators = (0 until numLayer).map(i => {
     val activation = if (i < numLayer - 1) "relu" else null

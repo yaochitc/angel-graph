@@ -25,6 +25,8 @@ class Node2Vec[T: ClassTag](nodeType: Int,
                             leftWinSize: Int,
                             rightWinSize: Int,
                             embeddingDim: Int,
+                            denseFeatureDim: Int,
+                            sparseFeatureMaxIds: Array[Int],
                             numNegs: Int = 5)
                            (implicit ev: TensorNumeric[T]) extends BaseModel[T] {
   private val pathLen = walkLen + 1
@@ -59,8 +61,8 @@ class Node2Vec[T: ClassTag](nodeType: Int,
     val pos = Input[T](inputShape = Shape(1))
     val neg = Input[T](inputShape = Shape(numNegs))
 
-    val targetEncoder = ShallowEncoder[T](dim, maxId, embeddingDim)
-    val contextEncoder = ShallowEncoder[T](dim, maxId, embeddingDim)
+    val targetEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
+    val contextEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
 
     val srcEmbedding = targetEncoder.encode(src, "src", isReplica = false)
     val posEmbedding = contextEncoder.encode(pos, "pos", isReplica = true)

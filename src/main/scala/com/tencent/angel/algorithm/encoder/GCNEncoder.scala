@@ -14,9 +14,11 @@ class GCNEncoder[T: ClassTag](numLayer: Int,
                               aggregatorType: SparseAggregatorType,
                               maxId: Int,
                               embeddingDim: Int,
+                              denseFeatureDim: Int,
+                              sparseFeatureMaxIds: Array[Int],
                               useResidual: Boolean)
                              (implicit ev: TensorNumeric[T]) extends BaseEncoder[T, (Seq[ModuleNode[T]], Seq[ModuleNode[T]])] {
-  private val nodeEncoder = ShallowEncoder[T](dim, maxId, embeddingDim)
+  private val nodeEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
 
   private val aggregators = (0 until numLayer).map(i => {
     val activation = if (i < numLayer - 1) "relu" else null

@@ -9,7 +9,9 @@ import scala.reflect.ClassTag
 
 class ShallowEncoder[T: ClassTag](dim: Int,
                                   maxId: Int,
-                                  embeddingDim: Int)
+                                  embeddingDim: Int,
+                                  denseFeatureDim: Int,
+                                  sparseFeatureMaxIds: Array[Int])
                                  (implicit ev: TensorNumeric[T]) extends BaseEncoder[T, ModuleNode[T]] {
   private val embeddingLayer = ReusableLayer[T](Embedding[T](maxId, embeddingDim), hasGradInput = false)
   private val denseLayer = ReusableLayer[T](Dense(dim, bias = false))
@@ -21,7 +23,11 @@ class ShallowEncoder[T: ClassTag](dim: Int,
 }
 
 object ShallowEncoder {
-  def apply[T: ClassTag](dim: Int, maxId: Int, embeddingDim: Int)(implicit ev: TensorNumeric[T]): ShallowEncoder[T] = {
-    new ShallowEncoder[T](dim, maxId, embeddingDim)
+  def apply[T: ClassTag](dim: Int,
+                         maxId: Int,
+                         embeddingDim: Int,
+                         denseFeatureDim: Int,
+                         sparseFeatureMaxIds: Array[Int])(implicit ev: TensorNumeric[T]): ShallowEncoder[T] = {
+    new ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
   }
 }

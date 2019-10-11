@@ -27,6 +27,8 @@ class Line[T: ClassTag](nodeType: Int,
                         maxId: Int,
                         dim: Int,
                         embeddingDim: Int,
+                        denseFeatureDim: Int,
+                        sparseFeatureMaxIds: Array[Int],
                         order: Order,
                         numNegs: Int = 5)
                        (implicit ev: TensorNumeric[T]) extends BaseModel[T] {
@@ -58,14 +60,14 @@ class Line[T: ClassTag](nodeType: Int,
     val pos = Input[T](inputShape = Shape(1))
     val neg = Input[T](inputShape = Shape(numNegs))
 
-    val targetEncoder = ShallowEncoder[T](dim, maxId, embeddingDim)
+    val targetEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
     val srcEmbedding = targetEncoder.encode(src, "src", isReplica = false)
 
     val (posEmbedding, negEmbedding) = order match {
       case Order.First =>
         (targetEncoder.encode(pos, "pos", isReplica = true), targetEncoder.encode(neg, "neg", isReplica = true))
       case Order.Second =>
-        val contextEncoder = ShallowEncoder[T](dim, maxId, embeddingDim)
+        val contextEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
         (contextEncoder.encode(pos, "pos", isReplica = false), contextEncoder.encode(neg, "neg", isReplica = true))
     }
 
