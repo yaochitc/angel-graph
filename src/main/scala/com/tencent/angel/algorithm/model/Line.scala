@@ -56,19 +56,25 @@ class Line[T: ClassTag](nodeType: Int,
   }
 
   override def buildModel(): Model[T] = {
-    val src = Input[T](inputShape = Shape(1))
-    val pos = Input[T](inputShape = Shape(1))
-    val neg = Input[T](inputShape = Shape(numNegs))
+    val src = Input[T](Shape(1))
+    val srcFeature = Input[T](Shape(denseFeatureDim))
+    val srcSparseFeature = sparseFeatureMaxIds.map(sparseFeatureMaxId => Input[T](Shape(sparseFeatureMaxId)))
+    val pos = Input[T](Shape(1))
+    val posFeature = Input[T](Shape(denseFeatureDim))
+    val posSparseFeature = sparseFeatureMaxIds.map(sparseFeatureMaxId => Input[T](Shape(sparseFeatureMaxId)))
+    val neg = Input[T](Shape(numNegs))
+    val negFeature = Input[T](Shape(denseFeatureDim))
+    val negSparseFeature = sparseFeatureMaxIds.map(sparseFeatureMaxId => Input[T](Shape(sparseFeatureMaxId)))
 
     val targetEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
-    val srcEmbedding = targetEncoder.encode((src, null, null), "src", isReplica = false)
+    val srcEmbedding = targetEncoder.encode((src, srcFeature, srcSparseFeature), "src", isReplica = false)
 
     val (posEmbedding, negEmbedding) = order match {
       case Order.First =>
-        (targetEncoder.encode((pos, null, null), "pos", isReplica = true), targetEncoder.encode((neg, null, null), "neg", isReplica = true))
+        (targetEncoder.encode((pos, posFeature, posSparseFeature), "pos", isReplica = true), targetEncoder.encode((neg, negFeature, negSparseFeature), "neg", isReplica = true))
       case Order.Second =>
         val contextEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
-        (contextEncoder.encode((pos, null, null), "pos", isReplica = false), contextEncoder.encode((neg, null, null), "neg", isReplica = true))
+        (contextEncoder.encode((pos, posFeature, posSparseFeature), "pos", isReplica = false), contextEncoder.encode((neg, negFeature, negSparseFeature), "neg", isReplica = true))
     }
 
     val posLogit = new KerasLayerWrapper[T](MM[T]()).inputs(srcEmbedding, posEmbedding)

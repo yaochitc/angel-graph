@@ -57,22 +57,30 @@ class Node2Vec[T: ClassTag](nodeType: Int,
   }
 
   override def buildModel(): Model[T] = {
-    val src = Input[T](inputShape = Shape(1))
-    val pos = Input[T](inputShape = Shape(1))
-    val neg = Input[T](inputShape = Shape(numNegs))
+    val src = Input[T](Shape(1))
+    val srcFeature = Input[T](Shape(denseFeatureDim))
+    val srcSparseFeature = sparseFeatureMaxIds.map(sparseFeatureMaxId => Input[T](Shape(sparseFeatureMaxId)))
+    val pos = Input[T](Shape(1))
+    val posFeature = Input[T](Shape(denseFeatureDim))
+    val posSparseFeature = sparseFeatureMaxIds.map(sparseFeatureMaxId => Input[T](Shape(sparseFeatureMaxId)))
+    val neg = Input[T](Shape(numNegs))
+    val negFeature = Input[T](Shape(denseFeatureDim))
+    val negSparseFeature = sparseFeatureMaxIds.map(sparseFeatureMaxId => Input[T](Shape(sparseFeatureMaxId)))
 
     val targetEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
     val contextEncoder = ShallowEncoder[T](dim, maxId, embeddingDim, denseFeatureDim, sparseFeatureMaxIds)
 
-    val srcEmbedding = targetEncoder.encode((src, null, null), "src", isReplica = false)
-    val posEmbedding = contextEncoder.encode((pos, null, null), "pos", isReplica = true)
-    val negEmbedding = contextEncoder.encode((neg, null, null), "neg", isReplica = true)
+    val srcEmbedding = targetEncoder.encode((src, srcFeature, srcSparseFeature), "src", isReplica = false)
+    val posEmbedding = contextEncoder.encode((pos, posFeature, posSparseFeature), "pos", isReplica = true)
+    val negEmbedding = contextEncoder.encode((neg, negFeature, negSparseFeature), "neg", isReplica = true)
 
     val posLogit = new KerasLayerWrapper[T](MM[T]()).inputs(srcEmbedding, posEmbedding)
     val negLogit = new KerasLayerWrapper[T](MM[T]()).inputs(srcEmbedding, negEmbedding)
 
     val logit = Merge[T](mode = "concat").inputs(posLogit, negLogit)
     val output = new KerasLayerWrapper[T](Sigmoid[T]()).inputs(logit)
-    Model[T](Array(src, pos, neg), output)
+    Model[T](Array(src, srcFeature) ++ srcSparseFeature
+      ++ Array(pos, posFeature) ++ posSparseFeature
+      ++ Array(neg, negFeature) ++ negSparseFeature, output)
   }
 }
