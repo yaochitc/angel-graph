@@ -16,7 +16,7 @@ class ShallowEncoder[T: ClassTag](dim: Int,
 
   override def encode(input: ModuleNode[T], namePrefix: String, isReplica: Boolean): ModuleNode[T] = {
     val embedding = embeddingLayer.copy(namePrefix + "_embedding", isReplica).inputs(input)
-    denseLayer.inputs(embedding)
+    denseLayer.copy(namePrefix + "_dense", isReplica).inputs(embedding)
   }
 }
 

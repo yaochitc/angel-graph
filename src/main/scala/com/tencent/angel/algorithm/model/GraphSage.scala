@@ -69,8 +69,8 @@ class GraphSage[T: ClassTag](nodeType: Int,
     val targetEncoder = new SageEncoder[T](numLayer, dim, aggregatorType, concat, maxId, embeddingDim)
 
     val srcEmbedding = targetEncoder.encode(srcTensors)
-    val posEmbedding = contextEncoder.encode(posTensors)
-    val negEmbedding = contextEncoder.encode(negTensors)
+    val posEmbedding = contextEncoder.encode(posTensors, "pos", isReplica = false)
+    val negEmbedding = contextEncoder.encode(negTensors, "neg", isReplica = true)
 
     val posLogit = new KerasLayerWrapper[T](MM[T]()).inputs(srcEmbedding, posEmbedding)
     val negLogit = new KerasLayerWrapper[T](MM[T]()).inputs(srcEmbedding, negEmbedding)
